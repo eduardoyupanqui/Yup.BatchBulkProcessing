@@ -19,6 +19,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Student", "Student", "{2627
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Soporte", "Soporte", "{1E57446F-A742-4E53-BD9C-63748EDA19E9}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Yup.Enumerados", "src\Yup.Enumerados\Yup.Enumerados.csproj", "{075D004B-472A-4FA9-A60C-C04F7F7AC0E5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1E20EC36-A28D-44FF-A26B-3E0846661347}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +48,10 @@ Global
 		{659F89D8-75CD-4350-93ED-C3E1D0B63C9A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{659F89D8-75CD-4350-93ED-C3E1D0B63C9A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{659F89D8-75CD-4350-93ED-C3E1D0B63C9A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{075D004B-472A-4FA9-A60C-C04F7F7AC0E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{075D004B-472A-4FA9-A60C-C04F7F7AC0E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{075D004B-472A-4FA9-A60C-C04F7F7AC0E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{075D004B-472A-4FA9-A60C-C04F7F7AC0E5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -52,6 +63,7 @@ Global
 		{659F89D8-75CD-4350-93ED-C3E1D0B63C9A} = {77C45324-05EA-4F03-9278-B6FCF5295D53}
 		{2627038A-1156-47BE-8113-18ABC0FE87AE} = {0435D8CB-8579-4166-92BA-C02E424F1099}
 		{1E57446F-A742-4E53-BD9C-63748EDA19E9} = {0435D8CB-8579-4166-92BA-C02E424F1099}
+		{075D004B-472A-4FA9-A60C-C04F7F7AC0E5} = {77C45324-05EA-4F03-9278-B6FCF5295D53}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F52EABAA-84CB-428A-9A21-97F697B28A16}
