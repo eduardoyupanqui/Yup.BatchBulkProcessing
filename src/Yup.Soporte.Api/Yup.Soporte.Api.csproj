@@ -15,7 +15,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Yup.BulkProcess.Contracts\Yup.BulkProcess.Contracts.csproj" />
     <ProjectReference Include="..\Yup.Enumerados\Yup.Enumerados.csproj" />
+    <ProjectReference Include="..\Yup.Soporte.Domain\Yup.Soporte.Domain.csproj" />
   </ItemGroup>
 
 </Project>
