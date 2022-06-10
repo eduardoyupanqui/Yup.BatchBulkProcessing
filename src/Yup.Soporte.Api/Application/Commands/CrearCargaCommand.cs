@@ -8,19 +8,15 @@ namespace Yup.Soporte.Api.Application.Commands;
 
 public abstract class CrearCargaCommand : AuditoriaCommand, IRequest<GenericResult<Guid>>
 {
-    [JsonIgnore]
     public int IdEntidad { get; set; }
-    [JsonIgnore]
     public int? TipoGestion { get; set; }
     [JsonIgnore]
     public ID_TBL_FORMATOS_CARGA IdTblTipoCarga { get; set; }
-    [JsonIgnore]
     public string CodigoEntidad { get; set; }
     [JsonIgnore]
     public virtual int CantidadRegistrosTotal { get; set; }
     [JsonIgnore]
     public int IdOrigenCarga { get; protected set; } //(0=archivoExcel,1=servicio externo)
-    [JsonIgnore]
     public string EntidadDescripcion { get; set; }
     [JsonIgnore]
     public string UsuarioCreacionDescripcion { get; set; }

@@ -1,6 +1,7 @@
 ﻿using Yup.BulkProcess.Contracts.Request;
 using System.Collections.Generic;
 using System.Linq;
+using Yup.Soporte.Domain.SeedworkMongoDB;
 
 namespace Yup.Soporte.Api.Application.Commands;
 
@@ -9,12 +10,12 @@ public class CrearCargaServicioExternoCommand<TProcesoMasivoDto> : CrearCargaCom
 {
     public CrearCargaServicioExternoCommand() : base()
     {
-        IdOrigenCarga = 1; //Servicio Externo
+        IdOrigenCarga = (int)OrigenCarga.SERVICIO_EXTERNO;
     }
-    public IEnumerable<TProcesoMasivoDto> elementos { get; set; }
+    public IEnumerable<TProcesoMasivoDto> Elementos { get; set; }
 
     public override int CantidadRegistrosTotal {
-        get { if (elementos == null) return 0; else return elementos.Count(); }
+        get { if (Elementos == null) return 0; else return Elementos.Count(); }
         set { base.CantidadRegistrosTotal = value; }
     }
 }

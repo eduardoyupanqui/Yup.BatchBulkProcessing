@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
+using Yup.BulkProcess.Contracts.Request;
 using Yup.Enumerados;
 using Yup.Soporte.Api.Application.Commands;
 using Yup.Soporte.Api.Dtos;
@@ -9,34 +10,18 @@ using Yup.Soporte.Api.Settings;
 namespace Yup.Soporte.Api.Controllers;
 
 [ApiController]
-[Route("[controller]")]
-public class ArchivoController : ControllerBase
+[Route("api/v1/[controller]")]
+public class CargaArchivoExcelController : ControllerBase
 {
-    private readonly ILogger<ArchivoController> _logger;
+    private readonly ILogger<CargaArchivoExcelController> _logger;
     private readonly IMediator _mediator;
     private readonly CargaMasivaSettings _cargaMasivaSettings;
 
-    public ArchivoController(ILogger<ArchivoController> logger, IMediator mediator, CargaMasivaSettings cargaMasivaSettings)
+    public CargaArchivoExcelController(ILogger<CargaArchivoExcelController> logger, IMediator mediator, CargaMasivaSettings cargaMasivaSettings)
     {
         _logger = logger;
         _mediator = mediator;
         _cargaMasivaSettings = cargaMasivaSettings;
-    }
-
-    [HttpGet(Name = "")]
-    public IEnumerable<object> Get()
-    {
-        string[] Summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
-        return Enumerable.Range(1, 5).Select(index => new
-        {
-            Date = DateTime.Now.AddDays(index),
-            TemperatureC = Random.Shared.Next(-20, 55),
-            Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-        })
-        .ToArray();
     }
     [Route("Adjuntar")]
     [HttpPost, DisableRequestSizeLimit]

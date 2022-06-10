@@ -3,6 +3,7 @@ using Yup.Core;
 using Yup.Enumerados;
 using Yup.Soporte.Api.Application.IntegrationEvents;
 using Yup.Soporte.Api.Application.Services.Interfaces;
+using Yup.Soporte.Domain.SeedworkMongoDB;
 
 namespace Yup.Soporte.Api.Application.Commands;
 
@@ -10,7 +11,7 @@ public class CrearCargaArchivoExcelCommand: CrearCargaCommand
 {
     public CrearCargaArchivoExcelCommand()
     {
-        base.IdOrigenCarga = 0; //ArchivoExcel
+        base.IdOrigenCarga = (int)OrigenCarga.ARCHIVO_EXCEL;
         FlagsPermisos = new CrearCargaFlagsPermisos();
     }
     //Solo archivos
