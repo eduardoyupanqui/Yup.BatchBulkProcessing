@@ -25,6 +25,8 @@ builder.Host.ConfigureContainer<ContainerBuilder>(builder =>
 {
     builder.RegisterModule(new ApplicationModule());
     builder.RegisterModule(new MediatorModule());
+    builder.RegisterAssemblyModules<CargaMasivaInitModule>(Assembly.GetExecutingAssembly());
+    builder.RegisterAssemblyModules<CargaSpecModule>(Assembly.GetExecutingAssembly());
 });
 
 #region CargaMasivaSettings
