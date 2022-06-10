@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using Yup.Enumerados;
 using Yup.Soporte.Api.Application.Commands;
+using Yup.Soporte.Api.Application.Services.Factories;
 using Yup.Soporte.Api.Application.Services.Interfaces;
 
 namespace Yup.Soporte.Api.Infrastructure.AutofacModules;
@@ -19,6 +20,7 @@ public class CargaMasivaInitModule : Autofac.Module
                 return registroCargaArchivoExcelService;
             };
         });
+        builder.RegisterType<RegistroCargaArchivoExcelServiceFactory>();
         #endregion
 
         #region Registro de resolver de generador de eventos de integración
@@ -31,6 +33,7 @@ public class CargaMasivaInitModule : Autofac.Module
                 return integracionArchivoCargaService;
             };
         });
+        builder.RegisterType<IntegracionEventGeneratorFactory>();
         #endregion
 
         #region Registro de resolver de validador especializado para archivos Excel
@@ -43,6 +46,7 @@ public class CargaMasivaInitModule : Autofac.Module
                 return validator;
             };
         });
+        builder.RegisterType<CrearCargaArchivoExcelCommandValidatorFactory>();
         #endregion
     }
 }

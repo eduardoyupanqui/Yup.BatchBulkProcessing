@@ -8,6 +8,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Yup.BulkProcess.Contracts.Request;
+using Yup.Soporte.Api.Application.Services.Factories;
 
 namespace Yup.Soporte.Api.Application.Services.CargaService.STUDENTS;
 
@@ -16,13 +17,13 @@ public class CrearCargaServicioExternoCommandHandler : IRequestHandler<CrearCarg
     private readonly ISoporteIntegrationEventService _soporteIntegrationEventService;
     private readonly ICargaServicioExternoRegistroService<DatosPersonaRequest> _registroCargaServicioExternoService;
     private readonly ICargaServicioExternoCommandValidator<DatosPersonaRequest> _crearCargaServicioExternoCommandValidator;
-    private readonly Func<ID_TBL_FORMATOS_CARGA, IGenericIntegrationEventGenerator> _integracionEventGenerator;
+    private readonly IntegracionEventGeneratorFactory _integracionEventGenerator;
 
     public CrearCargaServicioExternoCommandHandler(
         ISoporteIntegrationEventService soporteIntegrationEventService,
         ICargaServicioExternoRegistroService<DatosPersonaRequest> registroCargaServicioExternoService,
         ICargaServicioExternoCommandValidator<DatosPersonaRequest> crearCargaServicioExternoCommandValidator,
-        Func<ID_TBL_FORMATOS_CARGA, IGenericIntegrationEventGenerator> integracionEventGenerator
+        IntegracionEventGeneratorFactory integracionEventGenerator
         )
     {
         _soporteIntegrationEventService = soporteIntegrationEventService ?? throw new ArgumentNullException(nameof(soporteIntegrationEventService));
@@ -52,7 +53,7 @@ public class CrearCargaServicioExternoCommandHandler : IRequestHandler<CrearCarg
         #endregion
 
         #region Emisión de Evento de Integración
-        @genericEvent = _integracionEventGenerator(tipoCargaActual).GenerarEventoIntegracion(registroResult.DataObject);
+        @genericEvent = _integracionEventGenerator.Create(tipoCargaActual).GenerarEventoIntegracion(registroResult.DataObject);
         result.DataObject = registroResult.DataObject;
 
         if (@genericEvent != null)

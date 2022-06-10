@@ -2,6 +2,7 @@
 using Yup.Core;
 using Yup.Enumerados;
 using Yup.Soporte.Api.Application.IntegrationEvents;
+using Yup.Soporte.Api.Application.Services.Factories;
 using Yup.Soporte.Api.Application.Services.Interfaces;
 using Yup.Soporte.Domain.SeedworkMongoDB;
 
@@ -35,16 +36,16 @@ public class CrearCargaArchivoExcelCommand: CrearCargaCommand
     {
         private readonly ILogger _logger;
         private readonly ISoporteIntegrationEventService _soporteIntegrationEventService;
-        private readonly Func<ID_TBL_FORMATOS_CARGA, ICargaArchivoExcelRegistroService<CrearCargaArchivoExcelCommand>> _registroCargaArchivoExcelServiceFactory;
-        private readonly Func<ID_TBL_FORMATOS_CARGA, ICargaCommandValidator<CrearCargaArchivoExcelCommand>> _crearCargaArchivoExcelCommandValidatorFactory;
-        private readonly Func<ID_TBL_FORMATOS_CARGA, IGenericIntegrationEventGenerator> _integracionEventGenerator;
+        private readonly RegistroCargaArchivoExcelServiceFactory _registroCargaArchivoExcelServiceFactory;
+        private readonly CrearCargaArchivoExcelCommandValidatorFactory _crearCargaArchivoExcelCommandValidatorFactory;
+        private readonly IntegracionEventGeneratorFactory _integracionEventGenerator;
 
         public CrearCargaArchivoExcelCommandHandler(
             ILogger<CrearCargaArchivoExcelCommandHandler> logger, 
             ISoporteIntegrationEventService soporteIntegrationEventService,
-            Func<ID_TBL_FORMATOS_CARGA, ICargaArchivoExcelRegistroService<CrearCargaArchivoExcelCommand>> registroCargaArchivoExcelServiceFactory, 
-            Func<ID_TBL_FORMATOS_CARGA, ICargaCommandValidator<CrearCargaArchivoExcelCommand>> crearCargaArchivoExcelCommandValidatorFactory, 
-            Func<ID_TBL_FORMATOS_CARGA, IGenericIntegrationEventGenerator> integracionEventGenerator 
+            RegistroCargaArchivoExcelServiceFactory registroCargaArchivoExcelServiceFactory,
+            CrearCargaArchivoExcelCommandValidatorFactory crearCargaArchivoExcelCommandValidatorFactory,
+            IntegracionEventGeneratorFactory integracionEventGenerator 
             )
         {
             _logger = logger;
@@ -62,13 +63,13 @@ public class CrearCargaArchivoExcelCommand: CrearCargaCommand
                 ID_TBL_FORMATOS_CARGA tipoCargaActual = request.IdTblTipoCarga;
 
                 #region Validacion especializada
-                var registroCargaCommandValidator = _crearCargaArchivoExcelCommandValidatorFactory(tipoCargaActual);
+                var registroCargaCommandValidator = _crearCargaArchivoExcelCommandValidatorFactory.Create(tipoCargaActual);
                 result = await registroCargaCommandValidator.Validate(request, true);
                 if (result.HasErrors) { return result; }
                 #endregion
 
                 #region Registro
-                var registroCargaService = _registroCargaArchivoExcelServiceFactory(tipoCargaActual);
+                var registroCargaService = _registroCargaArchivoExcelServiceFactory.Create(tipoCargaActual);
                 var registroResult = await registroCargaService.RegistrarCargaYBloques(request);
                 if (registroResult.HasErrors)
                 {
@@ -77,7 +78,7 @@ public class CrearCargaArchivoExcelCommand: CrearCargaCommand
                 #endregion
 
                 #region Emisión de Evento de Integración
-                @genericEvent = _integracionEventGenerator(tipoCargaActual).GenerarEventoIntegracion(registroResult.DataObject, request.DatosAdicionales);
+                @genericEvent = _integracionEventGenerator.Create(tipoCargaActual).GenerarEventoIntegracion(registroResult.DataObject, request.DatosAdicionales);
                 result.DataObject = registroResult.DataObject;
 
                 if (@genericEvent != null)
