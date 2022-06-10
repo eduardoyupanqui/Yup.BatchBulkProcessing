@@ -11,9 +11,6 @@ public abstract class BaseMongoDocument : MongoDbGenericRepository.Models.Docume
         EsActivo = true;
     }
 
-    [BsonElement("_idStr", Order = 1)]
-    public string IdString { get { return Id.ToString(); } }
-
     [BsonElement("Act", Order = 2)]
     public bool EsActivo { get; set; }
 

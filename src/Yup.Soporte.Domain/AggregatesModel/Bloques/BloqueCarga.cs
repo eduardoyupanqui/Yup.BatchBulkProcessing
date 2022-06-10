@@ -10,8 +10,6 @@ public abstract class BloqueCarga<TFila> : ControlCargaMongoDocument
 {
     [BsonElement("IdC", Order = 1)]
     public Guid IdCarga { get; set; }
-    [BsonElement("IdCStr", Order = 2)]
-    public string IdCargaString { get { return IdCarga.ToString(); } }
 
     [BsonElement("FIn")]
     public int FilaInicial { get; set; }

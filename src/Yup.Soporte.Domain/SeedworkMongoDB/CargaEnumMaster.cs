@@ -6,11 +6,7 @@ namespace Yup.Soporte.Domain.SeedworkMongoDB;
 public enum TipoCargaServicioExterno
 {
     NO_DEFINIDO = 0,
-    INGRESANTES = 1,
-    MATRICULADOS = 2,
-    OCURRENCIAS = 3,
-    POSTULANTES = 26,
-    EGRESADOS = 36
+    STUDENTS = 1,
 }
 
 public enum TipoCarga

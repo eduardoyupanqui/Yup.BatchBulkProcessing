@@ -18,6 +18,7 @@
     <ProjectReference Include="..\Yup.BulkProcess.Contracts\Yup.BulkProcess.Contracts.csproj" />
     <ProjectReference Include="..\Yup.Enumerados\Yup.Enumerados.csproj" />
     <ProjectReference Include="..\Yup.Soporte.Domain\Yup.Soporte.Domain.csproj" />
+    <ProjectReference Include="..\Yup.Soporte.Infrastructure\Yup.Soporte.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
