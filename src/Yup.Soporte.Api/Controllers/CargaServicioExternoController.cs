@@ -24,7 +24,7 @@ public class CargaServicioExternoController : ControllerBase
     [HttpPost("Students")]
     [ProducesResponseType(typeof(GenericResult<Guid>), (int)HttpStatusCode.OK)]
     [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    public async Task<IActionResult> Students([FromBody] CrearCargaServicioExternoCommand<DatosPersonaRequest> command, CancellationToken cancellationToken)
+    public async Task<IActionResult> Students([FromBody] CrearCargaServicioExternoCommand command, CancellationToken cancellationToken)
     {
         var result = new GenericResult<Guid>();
         #region Lectura de usuario y entidad

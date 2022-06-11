@@ -8,8 +8,8 @@ namespace Yup.Soporte.Api.Application.Services.Interfaces;
 /// Interfaz genérica de RegistroCargaServicioExternoService para comandos de tipo "CrearCargaServicioExternoCommand"
 /// </summary>
 /// <typeparam name="TCargaCommand"></typeparam>
-public interface ICargaServicioExternoRegistroService<TFilaOrigen> : ICargaRegistroService<CrearCargaServicioExternoCommand<TFilaOrigen>>
-                                                                            where TFilaOrigen : ProcesoMasivoRequestBase, new()
+public interface ICargaServicioExternoRegistroService<TCargaCommand> : ICargaRegistroService<TCargaCommand>
+    where TCargaCommand : CrearCargaServicioExternoCommand
 {
 
 }
@@ -21,10 +21,12 @@ public interface ICargaServicioExternoRegistroService<TFilaOrigen> : ICargaRegis
 /// <typeparam name="TFilaOrigen"></typeparam>
 /// <typeparam name="TBloqueCarga"></typeparam>
 /// <typeparam name="TFilaCarga"></typeparam>
-public interface ICargaServicioExternoRegistroService<TFilaOrigen, TBloqueCarga, TFilaCarga> : ICargaServicioExternoRegistroService<TFilaOrigen>
+public interface ICargaServicioExternoRegistroService<TCargaCommand, TFilaOrigen, TBloqueCarga, TFilaCarga> : ICargaServicioExternoRegistroService<TCargaCommand>
+                                                                                                             where TCargaCommand : CrearCargaServicioExternoCommand
                                                                                                              where TFilaOrigen : ProcesoMasivoRequestBase, new()
                                                                                                              where TBloqueCarga : BloqueCarga<TFilaCarga>, new()
                                                                                                              where TFilaCarga : FilaArchivoCarga
 {
-    TFilaCarga ConvertirAFilaPersistencia(TFilaOrigen fila, CrearCargaServicioExternoCommand<TFilaOrigen> command);
+    TFilaCarga ConvertirAFilaPersistencia(TFilaOrigen fila, CrearCargaServicioExternoCommand command);
+    IEnumerable<TFilaOrigen> LeerFilasOrigen(TCargaCommand command);
 }

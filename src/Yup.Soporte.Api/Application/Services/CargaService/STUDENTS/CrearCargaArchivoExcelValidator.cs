@@ -10,10 +10,10 @@ using Yup.Soporte.Api.Application.Services;
 
 namespace Yup.Soporte.Api.Application.Services.CargaService.STUDENTS;
 
-public class CrearCargaArchivoValidator : CrearCargaArchivoBaseValidator,
+public class CrearCargaArchivoExcelValidator : CrearCargaArchivoBaseValidator,
                                                          ICargaCommandValidator<CrearCargaArchivoExcelCommand>
 {
-    public CrearCargaArchivoValidator(CargaMasivaSettings cargaMasivaSettings,
+    public CrearCargaArchivoExcelValidator(CargaMasivaSettings cargaMasivaSettings,
          IArchivoCargaRepository archivoCargaRepository,
                                                                             IGenericCargaQueries genericCargaQueries
                                                                          )

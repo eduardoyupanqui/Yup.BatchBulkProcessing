@@ -48,5 +48,35 @@ public class CargaMasivaInitModule : Autofac.Module
         });
         builder.RegisterType<CrearCargaArchivoExcelCommandValidatorFactory>();
         #endregion
+
+
+
+
+        #region Registro de resolver de IRegistroCargaArchivoExcelService
+        builder.Register<Func<ID_TBL_FORMATOS_CARGA, ICargaServicioExternoRegistroService<CrearCargaServicioExternoCommand>>>(c =>
+        {
+            var componentContext = c.Resolve<IComponentContext>();
+            return (idTblFormatoCargaEnum) =>
+            {
+                var registroCargaServicioExternoService = componentContext.ResolveKeyed<ICargaServicioExternoRegistroService<CrearCargaServicioExternoCommand>>(idTblFormatoCargaEnum);
+                return registroCargaServicioExternoService;
+            };
+        });
+        builder.RegisterType<RegistroCargaServicioExternoServiceFactory>();
+        #endregion
+
+
+        #region Componentes para carga mediante servicio externo
+        builder.Register<Func<ID_TBL_FORMATOS_CARGA, ICargaCommandValidator<CrearCargaServicioExternoCommand>>>(c =>
+        {
+            var componentContext = c.Resolve<IComponentContext>();
+            return (idTblFormatoCargaEnum) =>
+            {
+                var validator = componentContext.ResolveKeyed<ICargaCommandValidator<CrearCargaServicioExternoCommand>>(idTblFormatoCargaEnum);
+                return validator;
+            };
+        });
+        builder.RegisterType<CrearCargaServicioExternoCommandValidatorFactory>();
+        #endregion
     }
 }

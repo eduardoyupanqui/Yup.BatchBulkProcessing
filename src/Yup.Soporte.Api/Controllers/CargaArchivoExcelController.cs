@@ -39,7 +39,7 @@ public class CargaArchivoExcelController : ControllerBase
         string nombrePlantilla = "";
 
         //Especificando Tipo de Carga STUDENTS
-        idTblTipoCarga = (int)ID_TBL_FORMATOS_CARGA.STUDENTS; 
+        idTblTipoCarga = (int)ID_TBL_FORMATOS_CARGA.STUDENTS;
         nombrePlantilla = "plantilla_students.xlsx";
 
         int cantidadRegistrosTotal = 0;

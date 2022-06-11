@@ -8,5 +8,6 @@
         public string NombreEntidad { get; set; }
         public string DatosAdicionales { get; set; }
         public IFormFile File { get; set; }
+        public IEnumerable<Dictionary<string, string>> Elementos { get; set; }
     }
 }
