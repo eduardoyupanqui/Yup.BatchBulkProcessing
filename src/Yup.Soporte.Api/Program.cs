@@ -44,12 +44,23 @@ builder.Services.AddTransient<ISoporteIntegrationEventService, SoporteIntegratio
 
 #region MongoDb
 builder.Services.Configure<MongoDBSettings>(builder.Configuration.GetSection(nameof(MongoDBSettings)));
-//BsonDefaults.GuidRepresentation = GuidRepresentation.Standard;
-//BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
+
+BsonDefaults.GuidRepresentation = GuidRepresentation.Standard;
+BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
 
 builder.Services.AddSingleton<IMongoClient>(sp => {
     var mongoDbSettings = sp.GetRequiredService<IOptions<MongoDBSettings>>().Value;
-    return new MongoClient(mongoDbSettings.ConnectionString);
+    var mongoClientSettings = MongoClientSettings.FromUrl(new MongoUrl(mongoDbSettings.ConnectionString));
+    mongoClientSettings.GuidRepresentation = GuidRepresentation.Standard;
+#if DEBUG
+    mongoClientSettings.ClusterConfigurator = cb =>
+    {
+        cb.Subscribe<MongoDB.Driver.Core.Events.CommandStartedEvent>(e=> {
+            Console.WriteLine($"{e.CommandName} -> {e.Command.ToJson()}");
+        });
+    };
+#endif
+    return new MongoClient(mongoClientSettings);
 });
 
 builder.Services.AddScoped<IMongoDatabase>(sp =>
