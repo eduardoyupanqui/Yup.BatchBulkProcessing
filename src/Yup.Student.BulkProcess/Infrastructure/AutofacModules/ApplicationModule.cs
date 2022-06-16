@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using Autofac;
 using MediatR;
+using Yup.BulkProcess;
 using Yup.Soporte.Domain.AggregatesModel.ArchivoCargaAggregate;
 using Yup.Soporte.Domain.AggregatesModel.Bloques;
 using Yup.Soporte.Infrastructure.MongoDBRepositories;
@@ -19,6 +20,12 @@ public class ApplicationModule : Autofac.Module
         builder.RegisterType<BloqueCargaGenericRepository>()
            .As<IBloqueCargaGenericRepository>()
            .InstancePerLifetimeScope();
+        #endregion
+
+        #region Servicios
+        builder.RegisterType<SeguimientoProcesoBloqueService>()
+          .As<ISeguimientoProcesoBloqueService>()
+          .InstancePerLifetimeScope();
         #endregion
     }
 }

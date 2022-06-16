@@ -1,4 +1,8 @@
+using System.Net;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Yup.BulkProcess.Application.Commands;
+using Yup.Core;
 
 namespace Yup.Student.BulkProcess.Controllers;
 
@@ -8,25 +12,19 @@ public class RunProcessController : ControllerBase
 {
 
     private readonly ILogger<RunProcessController> _logger;
+    private readonly IMediator _mediator;
 
-    public RunProcessController(ILogger<RunProcessController> logger)
+    public RunProcessController(ILogger<RunProcessController> logger, IMediator mediator)
     {
         _logger = logger;
+        _mediator = mediator;
     }
 
-    [HttpGet(Name = "")]
-    public IEnumerable<object> Get()
+    [HttpGet(Name = "CrearStudentBulk")]
+    [ProducesResponseType(typeof(GenericResult<Guid>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> CrearStudentBulk([FromQuery] CrearStudentBulkCommand command)
     {
-        string[] Summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
-        return Enumerable.Range(1, 5).Select(index => new
-        {
-            Date = DateTime.Now.AddDays(index),
-            TemperatureC = Random.Shared.Next(-20, 55),
-            Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-        })
-        .ToArray();
+        var result = await _mediator.Send(command);
+        return Ok(result);
     }
 }
