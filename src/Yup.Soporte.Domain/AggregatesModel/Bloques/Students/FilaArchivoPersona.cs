@@ -1,4 +1,5 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
+using Yup.Validation;
 
 namespace Yup.Soporte.Domain.AggregatesModel.Bloques;
 
@@ -24,6 +25,16 @@ public class FilaArchivoPersona : FilaArchivoCarga
 
     [BsonElement("UbiRes")]
     public string ubigeo_residencia { get; set; }
+
+
+    /*Campos Comunes*/
+    [ValorRequerido]
+    [BsonElement("IpCreacion")]
+    public string IpCreacion { get; set; }
+    [ValorRequerido]
+    [BsonElement("UsuarioCreacion")]
+    public string UsuarioCreacion { get; set; }
+    /*==========================*/
 
     [BsonIgnoreIfNull]
     public FilaArchivoPersonaExtended Extended { get; set; }

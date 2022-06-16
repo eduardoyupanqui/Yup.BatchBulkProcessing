@@ -2,9 +2,11 @@
 using Autofac;
 using MediatR;
 using Yup.BulkProcess;
+using Yup.BulkProcess.Abstractions;
 using Yup.Soporte.Domain.AggregatesModel.ArchivoCargaAggregate;
 using Yup.Soporte.Domain.AggregatesModel.Bloques;
 using Yup.Soporte.Infrastructure.MongoDBRepositories;
+using Yup.Student.BulkProcess.Application.Conversions;
 
 namespace Yup.Student.BulkProcess.Infrastructure.AutofacModules;
 
@@ -26,6 +28,18 @@ public class ApplicationModule : Autofac.Module
         builder.RegisterType<SeguimientoProcesoBloqueService>()
           .As<ISeguimientoProcesoBloqueService>()
           .InstancePerLifetimeScope();
+
+        builder.RegisterType(typeof(FilaArchivoStudentConverter))
+            .As(typeof(IFilaArchivoCargaConverter<FilaArchivoPersona, Yup.Student.Domain.AggregatesModel.StudentAggregate.Student>));
+
+        builder.RegisterGeneric(typeof(ConsultaBloqueService<,,>))
+            .As(typeof(IConsultaBloqueService<,,>))
+            .InstancePerLifetimeScope();
+
+        builder.RegisterType<Fakes.FakeEventBus>()
+            .As<IEventBus>()
+            .InstancePerLifetimeScope();
+
         #endregion
     }
 }

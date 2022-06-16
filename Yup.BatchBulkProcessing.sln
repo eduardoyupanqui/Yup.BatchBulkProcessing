@@ -26,13 +26,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yup.Soporte.Domain", "src\Yup.Soporte.Domain\Yup.Soporte.Domain.csproj", "{D7D712AD-1556-4BE7-9A90-DB8AFACA413A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Yup.Soporte.Domain", "src\Yup.Soporte.Domain\Yup.Soporte.Domain.csproj", "{D7D712AD-1556-4BE7-9A90-DB8AFACA413A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yup.Validation", "src\Yup.Validation\Yup.Validation.csproj", "{E3EC2FA7-219D-449A-A8D7-0AA2E87A51F7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Yup.Validation", "src\Yup.Validation\Yup.Validation.csproj", "{E3EC2FA7-219D-449A-A8D7-0AA2E87A51F7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yup.BulkProcess.Contracts", "src\Yup.BulkProcess.Contracts\Yup.BulkProcess.Contracts.csproj", "{38D504C2-DF0D-4524-869D-A4E874FFE1E3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Yup.BulkProcess.Contracts", "src\Yup.BulkProcess.Contracts\Yup.BulkProcess.Contracts.csproj", "{38D504C2-DF0D-4524-869D-A4E874FFE1E3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yup.Soporte.Infrastructure", "src\Yup.Soporte.Infrastructure\Yup.Soporte.Infrastructure.csproj", "{07828510-8C21-45D6-845D-D894A412018E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Yup.Soporte.Infrastructure", "src\Yup.Soporte.Infrastructure\Yup.Soporte.Infrastructure.csproj", "{07828510-8C21-45D6-845D-D894A412018E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yup.Student.Domain", "src\Yup.Student.Domain\Yup.Student.Domain.csproj", "{ED59ED7A-7BCD-42EC-A954-1C201FD20F7A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -76,6 +78,10 @@ Global
 		{07828510-8C21-45D6-845D-D894A412018E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{07828510-8C21-45D6-845D-D894A412018E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{07828510-8C21-45D6-845D-D894A412018E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ED59ED7A-7BCD-42EC-A954-1C201FD20F7A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED59ED7A-7BCD-42EC-A954-1C201FD20F7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED59ED7A-7BCD-42EC-A954-1C201FD20F7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED59ED7A-7BCD-42EC-A954-1C201FD20F7A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -92,6 +98,7 @@ Global
 		{E3EC2FA7-219D-449A-A8D7-0AA2E87A51F7} = {77C45324-05EA-4F03-9278-B6FCF5295D53}
 		{38D504C2-DF0D-4524-869D-A4E874FFE1E3} = {77C45324-05EA-4F03-9278-B6FCF5295D53}
 		{07828510-8C21-45D6-845D-D894A412018E} = {1E57446F-A742-4E53-BD9C-63748EDA19E9}
+		{ED59ED7A-7BCD-42EC-A954-1C201FD20F7A} = {2627038A-1156-47BE-8113-18ABC0FE87AE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F52EABAA-84CB-428A-9A21-97F697B28A16}

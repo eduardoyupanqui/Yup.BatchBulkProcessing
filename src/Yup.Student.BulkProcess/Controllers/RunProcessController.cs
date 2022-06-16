@@ -22,8 +22,9 @@ public class RunProcessController : ControllerBase
 
     [HttpGet(Name = "CrearStudentBulk")]
     [ProducesResponseType(typeof(GenericResult<Guid>), (int)HttpStatusCode.OK)]
-    public async Task<IActionResult> CrearStudentBulk([FromQuery] CrearStudentBulkCommand command)
+    public async Task<IActionResult> CrearStudentBulk([FromQuery] Guid guidArchivo)
     {
+        var command = new CrearStudentBulkCommand(guidArchivo);
         var result = await _mediator.Send(command);
         return Ok(result);
     }

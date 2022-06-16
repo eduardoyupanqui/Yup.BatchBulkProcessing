@@ -26,11 +26,20 @@ public class CrearStudentBulkCommand : IRequest<GenericResult>
         private readonly ISeguimientoProcesoBloqueService _seguimientoBloqueService;
         private readonly IArchivoCargaRepository _archivoCargaRepository;
         private readonly IBloqueCargaGenericRepository _bloquesGenericRepository;
-        public CrearStudentBulkCommandHandler(IEventBus eventBus, ISeguimientoProcesoBloqueService seguimientoBloqueService)
+
+        private readonly IConsultaBloqueService<BloquePersonas, FilaArchivoPersona, Yup.Student.Domain.AggregatesModel.StudentAggregate.Student> _bloqueStudentConsultaService;
+        public CrearStudentBulkCommandHandler(
+            IEventBus eventBus, 
+            ISeguimientoProcesoBloqueService seguimientoBloqueService,
+            IArchivoCargaRepository archivoCargaRepository,
+            IConsultaBloqueService<BloquePersonas, FilaArchivoPersona, Student.Domain.AggregatesModel.StudentAggregate.Student> bloqueStudentConsultaService)
         {
             _eventBus = eventBus;
+            _seguimientoBloqueService = seguimientoBloqueService;
+            _archivoCargaRepository = archivoCargaRepository;
             EnlazarEventosDeServicioDeSeguimiento();
             _seguimientoBloqueService = seguimientoBloqueService;
+            _bloqueStudentConsultaService = bloqueStudentConsultaService;
         }
 
         private void EnlazarEventosDeServicioDeSeguimiento()
@@ -53,6 +62,8 @@ public class CrearStudentBulkCommand : IRequest<GenericResult>
             GenericResult result = new GenericResult();
             string hostName = System.Net.Dns.GetHostName();
 
+            //1) Obtención de claves repetidas
+            var lstUniqueKeysRepetidas = _bloqueStudentConsultaService.GetListUniqueKeysRepetidasDeIdArchivoCarga(archivoCarga.Id);
 
 
 
