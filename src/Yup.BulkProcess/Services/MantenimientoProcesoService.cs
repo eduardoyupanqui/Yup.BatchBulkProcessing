@@ -22,7 +22,7 @@ public abstract class MantenimientoProcesoService<TBloque, TFila> : IMantenimien
 
     public MantenimientoProcesoService(IBloqueCargaGenericRepository bloqueGenericRepository, ILogger logger)
     {
-        _bloqueGenericRepository = bloqueGenericRepository ?? throw new ArgumentNullException(nameof(bloqueGenericRepository));
+        _bloqueGenericRepository = bloqueGenericRepository!;
         _logger = logger;
     }
 

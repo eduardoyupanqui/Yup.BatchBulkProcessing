@@ -13,7 +13,7 @@ using Yup.Validation;
 namespace Yup.BulkProcess;
 
 public sealed class ProcesoBloqueService<TBloque, TFila, TFilaModel> : MantenimientoProcesoService<TBloque, TFila>,
-                                                      IProcesoBloqueService
+                                                      IProcesoBloqueService<TBloque, TFila, TFilaModel>
                                                       where TBloque : BloqueCarga<TFila>
                                                       where TFila : FilaArchivoCarga
                                                       where TFilaModel : IValidable
@@ -26,22 +26,18 @@ public sealed class ProcesoBloqueService<TBloque, TFila, TFilaModel> : Mantenimi
     public Func<ProcesoArchivoCargaEventArgs, Task> ProgresoProcesoAsync { private get; set; }
     public Func<ProcesoArchivoCargaEventArgs, Task> FinProcesoAsync { private get; set; }
 
-
     public ProcesoBloqueService(IBloqueCargaGenericRepository bloqueGenericRepository,
                                      IFilaArchivoCargaConverter<TFila, TFilaModel> converter,
-                                     IValidator<TFilaModel> modelValidator,
-                                     ILogger logger) : base(bloqueGenericRepository, logger)
+                                     ILogger<ProcesoBloqueService<TBloque, TFila, TFilaModel>> logger) : base(bloqueGenericRepository, logger)
     {
         _currentServiceId = Guid.NewGuid().ToString();
-        _modelValidator = modelValidator ?? throw new ArgumentNullException(nameof(modelValidator));
-        _converter = converter ?? throw new ArgumentNullException(nameof(converter));
+        _converter = converter!;
     }
 
     public override void SetAuditoriaInfo(string usuarioAutor, string ipOrigen, string hostNameOrigen)
     {
         #region Validacion/Asimilacion de parámetros de entrada
-        Guid tmpGuidUsuarioAutor;
-        if (Guid.TryParse(usuarioAutor, out tmpGuidUsuarioAutor) == false) throw new ArgumentNullException(nameof(usuarioAutor));
+        if (Guid.TryParse(usuarioAutor, out _) == false) throw new ArgumentNullException(nameof(usuarioAutor));
         if (string.IsNullOrWhiteSpace(ipOrigen)) throw new ArgumentNullException(nameof(ipOrigen));
         if (string.IsNullOrWhiteSpace(hostNameOrigen)) throw new ArgumentNullException(nameof(hostNameOrigen));
 
@@ -50,6 +46,12 @@ public sealed class ProcesoBloqueService<TBloque, TFila, TFilaModel> : Mantenimi
         _hostNameOrigen = hostNameOrigen;
         #endregion
     }
+
+    public void SetValidator(IValidator<TFilaModel> modelValidator)
+    {
+        _modelValidator = modelValidator ?? throw new ArgumentNullException(nameof(modelValidator));
+    }
+
     public async Task ProcesarBloquesDeArchivoAsync(Guid idArchivoCarga)
     {
         var objArchivoCarga = _bloqueGenericRepository.GetById<ArchivoCarga>(idArchivoCarga);
