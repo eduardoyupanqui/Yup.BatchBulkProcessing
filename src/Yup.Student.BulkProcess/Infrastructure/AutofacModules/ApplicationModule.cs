@@ -2,13 +2,13 @@
 using Autofac;
 using MediatR;
 using Yup.BulkProcess;
-using Yup.BulkProcess.Abstractions;
 using Yup.Soporte.Domain.AggregatesModel.ArchivoCargaAggregate;
 using Yup.Soporte.Domain.AggregatesModel.Bloques;
 using Yup.Soporte.Infrastructure.MongoDBRepositories;
 using Yup.Student.BulkProcess.Application.Conversions;
 using Yup.Student.BulkProcess.Application.Queries;
 using Yup.Student.BulkProcess.Application.Validations;
+using Yup.Student.BulkProcess.Infrastructure.Services;
 
 namespace Yup.Student.BulkProcess.Infrastructure.AutofacModules;
 

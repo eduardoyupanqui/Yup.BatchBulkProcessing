@@ -5,11 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using MediatR;
 using Yup.BulkProcess;
-using Yup.BulkProcess.Abstractions;
 using Yup.Core;
 using Yup.Soporte.Domain.AggregatesModel.ArchivoCargaAggregate;
 using Yup.Soporte.Domain.AggregatesModel.Bloques;
 using Yup.Student.BulkProcess.Application.Validations;
+using Yup.Student.BulkProcess.Infrastructure.Services;
 using Yup.Student.Domain.Validations;
 
 namespace Yup.BulkProcess.Application.Commands;
