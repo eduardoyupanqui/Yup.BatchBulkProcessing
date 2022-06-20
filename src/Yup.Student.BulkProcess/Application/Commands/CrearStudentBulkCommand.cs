@@ -8,8 +8,12 @@ using Yup.BulkProcess;
 using Yup.Core;
 using Yup.Soporte.Domain.AggregatesModel.ArchivoCargaAggregate;
 using Yup.Soporte.Domain.AggregatesModel.Bloques;
+using Yup.Soporte.Domain.SeedworkMongoDB;
+using Yup.Student.BulkProcess.Application.IntegrationEvents.Events;
+using Yup.Student.BulkProcess.Application.Queries;
 using Yup.Student.BulkProcess.Application.Validations;
 using Yup.Student.BulkProcess.Infrastructure.Services;
+using Yup.Student.BulkProcess.IntegrationEvents.Events;
 using Yup.Student.Domain.Validations;
 
 namespace Yup.BulkProcess.Application.Commands;
@@ -24,26 +28,32 @@ public class CrearStudentBulkCommand : IRequest<GenericResult>
 
     public class CrearStudentBulkCommandHandler : IRequestHandler<CrearStudentBulkCommand, GenericResult>
     {
+        private readonly ILogger _logger;
         private readonly IEventBus _eventBus;
         private readonly ISeguimientoProcesoBloqueService _seguimientoBloqueService;
         private readonly IArchivoCargaRepository _archivoCargaRepository;
+        private readonly ITransversalQueries _transversalQueries;
 
         private readonly IConsultaBloqueService<BloquePersonas, FilaArchivoPersona, Yup.Student.Domain.AggregatesModel.StudentAggregate.Student> _bloqueStudentConsultaService;
         private IProcesoBloqueService<BloquePersonas, FilaArchivoPersona, Student.Domain.AggregatesModel.StudentAggregate.Student> _procesoBloqueService;
 
         private readonly StudentValidationContextGenerator _studentValidationContextGenerator;
         public CrearStudentBulkCommandHandler(
+            ILogger<CrearStudentBulkCommandHandler> logger,
             IEventBus eventBus,
             ISeguimientoProcesoBloqueService seguimientoBloqueService,
             IArchivoCargaRepository archivoCargaRepository,
+            ITransversalQueries transversalQueries,
 
             IConsultaBloqueService<BloquePersonas, FilaArchivoPersona, Student.Domain.AggregatesModel.StudentAggregate.Student> bloqueStudentConsultaService,
             IProcesoBloqueService<BloquePersonas, FilaArchivoPersona, Student.Domain.AggregatesModel.StudentAggregate.Student> procesoBloqueService,
             StudentValidationContextGenerator studentValidationContextGenerator)
         {
+            _logger = logger;
             _eventBus = eventBus;
             _seguimientoBloqueService = seguimientoBloqueService;
             _archivoCargaRepository = archivoCargaRepository;
+            _transversalQueries = transversalQueries;
             EnlazarEventosDeServicioDeSeguimiento();
             _seguimientoBloqueService = seguimientoBloqueService;
             _bloqueStudentConsultaService = bloqueStudentConsultaService;
@@ -74,6 +84,12 @@ public class CrearStudentBulkCommand : IRequest<GenericResult>
             _procesoBloqueService.SetAuditoriaInfo(usuarioAutor: archivoCarga.UsuarioCreacion, ipOrigen: archivoCarga.IpCreacion, hostNameOrigen: hostName);
             _procesoBloqueService.SetValidator(modelValidator: await GenerarValidadorAprovisionado(archivoCarga));
 
+            //3) Enlace de eventos
+            _procesoBloqueService.InicioProcesoAsync = OnProcesoBloqueServiceEventoProceso;
+            _procesoBloqueService.ProgresoProcesoAsync = OnProcesoBloqueServiceEventoProceso;
+            _procesoBloqueService.FinProcesoAsync = OnProcesoBloqueServiceEventoProceso;
+            //4) Invocación del proceso
+            await _procesoBloqueService.ProcesarBloquesDeArchivoAsync(archivoCarga.Id);
 
 
             return result;
@@ -87,15 +103,82 @@ public class CrearStudentBulkCommand : IRequest<GenericResult>
             StudentValidator validator = new StudentValidator(validationContext);
             return validator;
         }
-
-        Task OnSeguimientoProcesoArchivoStatusUpdate(SeguimientoProcesoArchivoEventArgs args)
+        private async Task OnProcesoBloqueServiceEventoProceso(ProcesoArchivoCargaEventArgs args)
         {
-            return Task.CompletedTask;
-        }
-        Task OnSeguimientoProcesoArchivoCompletado(SeguimientoProcesoArchivoEventArgs args)
-        {
-            return Task.CompletedTask;
+            await _seguimientoBloqueService.ProcesarMensajeProgresoAsync(args);
         }
 
+        async Task OnSeguimientoProcesoArchivoStatusUpdate(SeguimientoProcesoArchivoEventArgs args)
+        {
+            await _eventBus.Publish(new ProcesoCargaStatusIntegrationEvent(idEntidad: args.CodigoEntidad,
+                                                          procesoId: args.IdArchivoCarga,
+                                                          total: args.ContadoresProceso.TotalElementos,
+                                                          evaluados: args.ContadoresProceso.Evaluados,
+                                                          evaluadosValidos: args.ContadoresProceso.EvaluadosValidos,
+                                                          evaluadosObservados: args.ContadoresProceso.EvaluadosObservados
+                                                          ));
+        }
+        async Task OnSeguimientoProcesoArchivoCompletado(SeguimientoProcesoArchivoEventArgs args)
+        {
+            ArchivoCarga objArchivoCarga = await _archivoCargaRepository.FindByIdAsync(args.IdArchivoCarga);
+            if (objArchivoCarga == null) { return; }
+
+            try
+            {
+                await _eventBus.Publish(new ProcesoCargaStatusIntegrationEvent(idEntidad: args.CodigoEntidad,
+                                                               procesoId: args.IdArchivoCarga,
+                                                               total: args.ContadoresProceso.TotalElementos,
+                                                               evaluados: args.ContadoresProceso.Evaluados,
+                                                               evaluadosValidos: args.ContadoresProceso.EvaluadosValidos,
+                                                               evaluadosObservados: args.ContadoresProceso.EvaluadosObservados
+                                                               ));
+
+
+                var lstRegistrosParaInsercion = _bloqueStudentConsultaService.ObtenerFilasDeArchivoModelValidas(args.IdArchivoCarga).ToList();
+
+
+
+                //Cambiando estado de archivoCarga a "40-Finalizado"
+                _archivoCargaRepository.UpdateStatus(objArchivoCarga, EstadoCarga.FINALIZADO, actualizarFechaAsociada: true);
+
+                await NotificarProcesoMasiva(args.IdArchivoCarga);
+
+                await _eventBus.Publish(new ProcesoCargaStatusIntegrationEvent(idEntidad: args.CodigoEntidad,
+                                                   procesoId: args.IdArchivoCarga,
+                                                   total: args.ContadoresProceso.TotalElementos,
+                                                   evaluados: args.ContadoresProceso.Evaluados,
+                                                   evaluadosValidos: args.ContadoresProceso.EvaluadosValidos,
+                                                   evaluadosObservados: args.ContadoresProceso.EvaluadosObservados
+                                                   ));
+
+            }
+            catch (Exception ex)
+            {
+                _archivoCargaRepository.UpdateStatus(objArchivoCarga, EstadoCarga.REGISTRADO_CON_ERRORES, actualizarFechaAsociada: false);
+                _logger.LogError(ex, $"Ocurrió un error al migrar el registro. Por favor reintente.");
+            }
+            _logger.LogInformation($"El proceso terminó: - {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")}");
+        }
+
+        private async Task<bool> NotificarProcesoMasiva(Guid guidArchivoCarga)
+        {
+            var archivoCarga = await _archivoCargaRepository.FindByIdAsync(guidArchivoCarga);
+            var entidad = await _transversalQueries.ObtenerEntidadAsync(archivoCarga.IdEntidad);
+            Dictionary<string, string> dParametroPlantilla = new Dictionary<string, string>();
+            dParametroPlantilla.Add("entidad", entidad.Nombre);
+            dParametroPlantilla.Add("fechaCarga", archivoCarga.FechaCreacion.Value.ToString("dd/MM/yyyy"));
+            dParametroPlantilla.Add("horaCarga", archivoCarga.FechaCreacion.Value.ToString("HH:mm:ss"));
+            dParametroPlantilla.Add("tipoArchivoCarga", "cursos");
+            dParametroPlantilla.Add("archivoCarga", archivoCarga.Nombre);
+
+            dParametroPlantilla.Add("totalValidos", archivoCarga.CantidadEvaluadosValidos.ToString());
+            dParametroPlantilla.Add("totalObservados", archivoCarga.CantidadEvaluadosObservados.ToString());
+            dParametroPlantilla.Add("totalRegistros", archivoCarga.CantidadTotalElementos.ToString());
+
+            dParametroPlantilla.Add("guidArchivo", guidArchivoCarga.ToString());
+            var @enviarCorreoEvent = new EnviarNotificacionIntegrationEvent(entidad.CodigoEntidad, "00022", dParametroPlantilla);
+            await _eventBus.Publish(@enviarCorreoEvent);
+            return true;
+        }
     }
 }
