@@ -63,6 +63,7 @@ public class SeguimientoProcesoArchivoEventArgs
     public int IdEntidad { get; set; }
     public string CodigoEntidad { get; set; }
     public Guid IdArchivoCarga { get; set; }
+    public Guid IdBloque { get; set; }
     public ContadoresProceso ContadoresProceso { get; set; }
 
 }

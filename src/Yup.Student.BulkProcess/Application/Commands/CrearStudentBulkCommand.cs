@@ -30,7 +30,6 @@ public class CrearStudentBulkCommand : IRequest<GenericResult>
     {
         private readonly ILogger _logger;
         private readonly IEventBus _eventBus;
-        private readonly ISeguimientoProcesoBloqueService _seguimientoBloqueService;
         private readonly IArchivoCargaRepository _archivoCargaRepository;
         private readonly ITransversalQueries _transversalQueries;
 
@@ -51,20 +50,11 @@ public class CrearStudentBulkCommand : IRequest<GenericResult>
         {
             _logger = logger;
             _eventBus = eventBus;
-            _seguimientoBloqueService = seguimientoBloqueService;
             _archivoCargaRepository = archivoCargaRepository;
             _transversalQueries = transversalQueries;
-            EnlazarEventosDeServicioDeSeguimiento();
-            _seguimientoBloqueService = seguimientoBloqueService;
             _bloqueStudentConsultaService = bloqueStudentConsultaService;
             _procesoBloqueService = procesoBloqueService;
             _studentValidationContextGenerator = studentValidationContextGenerator;
-        }
-
-        private void EnlazarEventosDeServicioDeSeguimiento()
-        {
-            _seguimientoBloqueService.StatusUpdateAsync = OnSeguimientoProcesoArchivoStatusUpdate;
-            _seguimientoBloqueService.ProcessCompletedAsync = OnSeguimientoProcesoArchivoCompletado;
         }
 
         public async Task<GenericResult> Handle(CrearStudentBulkCommand request, CancellationToken cancellationToken)
@@ -85,9 +75,9 @@ public class CrearStudentBulkCommand : IRequest<GenericResult>
             _procesoBloqueService.SetValidator(modelValidator: await GenerarValidadorAprovisionado(archivoCarga));
 
             //3) Enlace de eventos
-            _procesoBloqueService.InicioProcesoAsync = OnProcesoBloqueServiceEventoProceso;
-            _procesoBloqueService.ProgresoProcesoAsync = OnProcesoBloqueServiceEventoProceso;
-            _procesoBloqueService.FinProcesoAsync = OnProcesoBloqueServiceEventoProceso;
+            _procesoBloqueService.InicioProcesoAsync = OnProcesoBloqueServiceEventoInicioProceso;
+            _procesoBloqueService.ProgresoProcesoAsync = OnProcesoBloqueServiceEventoProgresoProceso;
+            _procesoBloqueService.FinProcesoAsync = OnProcesoBloqueServiceEventoFinProceso;
             //4) Invocación del proceso
             await _procesoBloqueService.ProcesarBloquesDeArchivoAsync(archivoCarga.Id);
 
@@ -103,12 +93,11 @@ public class CrearStudentBulkCommand : IRequest<GenericResult>
             StudentValidator validator = new StudentValidator(validationContext);
             return validator;
         }
-        private async Task OnProcesoBloqueServiceEventoProceso(ProcesoArchivoCargaEventArgs args)
+        private Task OnProcesoBloqueServiceEventoInicioProceso(ProcesoArchivoCargaEventArgs args)
         {
-            await _seguimientoBloqueService.ProcesarMensajeProgresoAsync(args);
+            return Task.CompletedTask;
         }
-
-        async Task OnSeguimientoProcesoArchivoStatusUpdate(SeguimientoProcesoArchivoEventArgs args)
+        private async Task OnProcesoBloqueServiceEventoProgresoProceso(ProcesoArchivoCargaEventArgs args)
         {
             await _eventBus.Publish(new ProcesoCargaStatusIntegrationEvent(idEntidad: args.CodigoEntidad,
                                                           procesoId: args.IdArchivoCarga,
@@ -118,7 +107,7 @@ public class CrearStudentBulkCommand : IRequest<GenericResult>
                                                           evaluadosObservados: args.ContadoresProceso.EvaluadosObservados
                                                           ));
         }
-        async Task OnSeguimientoProcesoArchivoCompletado(SeguimientoProcesoArchivoEventArgs args)
+        private async Task OnProcesoBloqueServiceEventoFinProceso(ProcesoArchivoCargaEventArgs args)
         {
             ArchivoCarga objArchivoCarga = await _archivoCargaRepository.FindByIdAsync(args.IdArchivoCarga);
             if (objArchivoCarga == null) { return; }

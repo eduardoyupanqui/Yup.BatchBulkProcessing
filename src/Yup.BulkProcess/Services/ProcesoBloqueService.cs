@@ -26,12 +26,17 @@ public sealed class ProcesoBloqueService<TBloque, TFila, TFilaModel> : Mantenimi
     public Func<ProcesoArchivoCargaEventArgs, Task> ProgresoProcesoAsync { private get; set; }
     public Func<ProcesoArchivoCargaEventArgs, Task> FinProcesoAsync { private get; set; }
 
+    private readonly ISeguimientoProcesoBloqueService _seguimientoBloqueService;
+
     public ProcesoBloqueService(IBloqueCargaGenericRepository bloqueGenericRepository,
                                      IFilaArchivoCargaConverter<TFila, TFilaModel> converter,
+                                     ISeguimientoProcesoBloqueService seguimientoBloqueService,
                                      ILogger<ProcesoBloqueService<TBloque, TFila, TFilaModel>> logger) : base(bloqueGenericRepository, logger)
     {
         _currentServiceId = Guid.NewGuid().ToString();
         _converter = converter!;
+        _seguimientoBloqueService = seguimientoBloqueService!;
+        EnlazarEventosDeServicioDeSeguimiento();
     }
 
     public override void SetAuditoriaInfo(string usuarioAutor, string ipOrigen, string hostNameOrigen)
@@ -52,6 +57,43 @@ public sealed class ProcesoBloqueService<TBloque, TFila, TFilaModel> : Mantenimi
         _modelValidator = modelValidator ?? throw new ArgumentNullException(nameof(modelValidator));
     }
 
+    private void EnlazarEventosDeServicioDeSeguimiento()
+    {
+        _seguimientoBloqueService.ProcessStartedAsync = OnSeguimientoProcesoArchivoIniciado;
+        _seguimientoBloqueService.StatusUpdateAsync = OnSeguimientoProcesoArchivoStatusUpdate;
+        _seguimientoBloqueService.ProcessCompletedAsync = OnSeguimientoProcesoArchivoCompletado;
+    }
+    Task OnSeguimientoProcesoArchivoIniciado(SeguimientoProcesoArchivoEventArgs args)
+    {
+        return InicioProcesoAsync?.Invoke(new ProcesoArchivoCargaEventArgs(TipoEventoProcesoArchivo.Inicio)
+        {
+            IdArchivoCarga = args.IdArchivoCarga,
+            IdEntidad = args.IdEntidad,
+            CodigoEntidad = args.CodigoEntidad,
+            ContadoresProceso = args.ContadoresProceso
+        }) ?? Task.CompletedTask;
+    }
+    Task OnSeguimientoProcesoArchivoStatusUpdate(SeguimientoProcesoArchivoEventArgs args) 
+    {
+        return ProgresoProcesoAsync?.Invoke(new ProcesoArchivoCargaEventArgs(TipoEventoProcesoArchivo.Progreso)
+        {
+            IdArchivoCarga = args.IdArchivoCarga,
+            IdBloque = args.IdBloque,
+            IdEntidad = args.IdEntidad,
+            CodigoEntidad = args.CodigoEntidad,
+            ContadoresProceso = args.ContadoresProceso
+        }) ?? Task.CompletedTask;
+    }
+    Task OnSeguimientoProcesoArchivoCompletado(SeguimientoProcesoArchivoEventArgs args)
+    {
+        return FinProcesoAsync?.Invoke(new ProcesoArchivoCargaEventArgs(TipoEventoProcesoArchivo.Fin)
+        {
+            IdArchivoCarga = args.IdArchivoCarga,
+            IdEntidad = args.IdEntidad,
+            CodigoEntidad = args.CodigoEntidad,
+            ContadoresProceso = args.ContadoresProceso ?? new ContadoresProceso()
+        }) ?? Task.CompletedTask;
+    }
     public async Task ProcesarBloquesDeArchivoAsync(Guid idArchivoCarga)
     {
         var objArchivoCarga = _bloqueGenericRepository.GetById<ArchivoCarga>(idArchivoCarga);
@@ -69,7 +111,7 @@ public sealed class ProcesoBloqueService<TBloque, TFila, TFilaModel> : Mantenimi
             #endregion
 
             #region 2) Generando evento "Inicio de proceso"
-            await InicioProcesoAsync(new ProcesoArchivoCargaEventArgs(TipoEventoProcesoArchivo.Inicio)
+            await _seguimientoBloqueService.ProcesarMensajeProgresoAsync(new ProcesoArchivoCargaEventArgs(TipoEventoProcesoArchivo.Inicio)
             {
                 IdArchivoCarga = idArchivoCarga,
                 IdEntidad = objArchivoCarga.IdEntidad,
@@ -155,7 +197,7 @@ public sealed class ProcesoBloqueService<TBloque, TFila, TFilaModel> : Mantenimi
             if (filaEnProceso.Evaluado && !filaEnProceso.EsValido) { contadoresBloque.EvaluadosObservados++; }
             #endregion
 
-            await ProgresoProcesoAsync(new ProcesoArchivoCargaEventArgs(TipoEventoProcesoArchivo.Progreso)
+            await _seguimientoBloqueService.ProcesarMensajeProgresoAsync(new ProcesoArchivoCargaEventArgs(TipoEventoProcesoArchivo.Progreso)
             {
                 IdArchivoCarga = objArchivoCarga.Id,
                 IdBloque = currentBloqueId,
@@ -223,7 +265,7 @@ public sealed class ProcesoBloqueService<TBloque, TFila, TFilaModel> : Mantenimi
 
         #endregion
         #region 2) Generando evento Finalizacion de proceso
-        await FinProcesoAsync(new ProcesoArchivoCargaEventArgs(TipoEventoProcesoArchivo.Fin)
+        await _seguimientoBloqueService.ProcesarMensajeProgresoAsync(new ProcesoArchivoCargaEventArgs(TipoEventoProcesoArchivo.Fin)
         {
             IdArchivoCarga = idArchivoCarga,
             IdEntidad = objArchivoCarga.IdEntidad,

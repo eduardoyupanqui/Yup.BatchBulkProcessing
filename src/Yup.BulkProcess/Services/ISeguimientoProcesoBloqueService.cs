@@ -8,6 +8,7 @@ namespace Yup.BulkProcess;
 
 public interface ISeguimientoProcesoBloqueService
 {
+    Func<SeguimientoProcesoArchivoEventArgs, Task> ProcessStartedAsync { set; }
     Func<SeguimientoProcesoArchivoEventArgs, Task> StatusUpdateAsync { set; }
     Func<SeguimientoProcesoArchivoEventArgs, Task> ProcessCompletedAsync { set; }
     Task ProcesarMensajeProgresoAsync(ProcesoArchivoCargaEventArgs eventArgs);
