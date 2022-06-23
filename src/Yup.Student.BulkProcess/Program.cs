@@ -5,6 +5,11 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
+using StackExchange.Redis.Extensions.Core;
+using StackExchange.Redis.Extensions.Core.Abstractions;
+using StackExchange.Redis.Extensions.Core.Configuration;
+using StackExchange.Redis.Extensions.Core.Implementations;
+using StackExchange.Redis.Extensions.Utf8Json;
 using Yup.Student.BulkProcess.Infrastructure.AutofacModules;
 using Yup.Student.BulkProcess.Settings;
 
@@ -54,6 +59,18 @@ builder.Services.AddScoped<IMongoDatabase>(sp =>
     var client = sp.GetRequiredService<IMongoClient>();
     return client.GetDatabase(_url.DatabaseName);
 });
+#endregion
+
+#region Redis
+builder.Services.AddSingleton(builder.Configuration.GetSection("Redis").Get<RedisConfiguration>());
+builder.Services.AddSingleton<IRedisCacheClient, RedisCacheClient>();
+builder.Services.AddSingleton<IRedisCacheConnectionPoolManager, RedisCacheConnectionPoolManager>();
+//builder.Services.AddSingleton<IRedisDefaultCacheClient, RedisDefaultCacheClient>();
+builder.Services.AddSingleton((provider) =>
+{
+    return provider.GetRequiredService<IRedisCacheClient>().GetDbFromConfiguration();
+});
+builder.Services.AddSingleton<ISerializer, Utf8JsonSerializer>();
 #endregion
 
 var app = builder.Build();
