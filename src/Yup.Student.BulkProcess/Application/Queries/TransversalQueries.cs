@@ -8,9 +8,9 @@ public class TransversalQueries : ITransversalQueries
     {
         return Task.FromResult(new Dictionary<string, string> 
         {
-            { "1", "Español" },
-            { "2", "Ingles" },
-            { "3", "Frances" }
+            { "30", "Español" },
+            { "46", "Ingles" },
+            { "35", "Frances" }
         });
     }
 
@@ -18,8 +18,8 @@ public class TransversalQueries : ITransversalQueries
     {
         return Task.FromResult(new Dictionary<string, string>
         {
-            { "1", "Ashaninca" },
-            { "2", "Aimara" }
+            { "2", "Aimara" },
+            { "5", "Ashaninka" }
         });
     }
 

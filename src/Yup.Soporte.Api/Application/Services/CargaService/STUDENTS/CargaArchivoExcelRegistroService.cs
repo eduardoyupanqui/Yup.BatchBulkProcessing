@@ -40,7 +40,10 @@ public class RegistroCargaArchivoExcelService : CargaArchivoExcelRegistroBaseSer
             lengua_nativa = x.LenguaNativa,
             nro_documento = x.NroDocumento,
             tipo_documento = x.TipoDocumento,
-            ubigeo_residencia = x.UbigeoDomicilio
+            ubigeo_residencia = x.UbigeoDomicilio,
+
+            UsuarioCreacion = command.UsuarioRegistro.ToString(),
+            IpCreacion = command.IpRegistro
         };
     }
 

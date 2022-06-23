@@ -13,7 +13,6 @@ using Yup.Student.BulkProcess.Application.IntegrationEvents.Events;
 using Yup.Student.BulkProcess.Application.Queries;
 using Yup.Student.BulkProcess.Application.Validations;
 using Yup.Student.BulkProcess.Infrastructure.Services;
-using Yup.Student.BulkProcess.IntegrationEvents.Events;
 using Yup.Student.Domain.Validations;
 
 namespace Yup.BulkProcess.Application.Commands;

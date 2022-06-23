@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -18,6 +19,10 @@ public sealed class ProcesoBloqueService<TBloque, TFila, TFilaModel> : Mantenimi
                                                       where TFila : FilaArchivoCarga
                                                       where TFilaModel : IValidable
 {
+    private static List<string> lstIdsPropiedadesListas = new List<string> { "System.Collections.Generic.IEnumerable" };
+    private const int frecuenciaActualizacionAvanceProcesoEstandar = 100; //"Notificar Cada"
+    private const int frecuenciaActualizacionAvanceProcesoMinimo = 10; //"Notificar Cada"
+
     private IValidator<TFilaModel> _modelValidator;
     private IFilaArchivoCargaConverter<TFila, TFilaModel> _converter;
     private string _currentServiceId;
@@ -167,6 +172,37 @@ public sealed class ProcesoBloqueService<TBloque, TFila, TFilaModel> : Mantenimi
             filaEnProceso = objBloqueDeBD.Filas[i];
             var validationResult = filaEnProceso.ValidarAtributos();
 
+            #region Validacion preliminar de atributos
+            int hijosInvalidos = 0;
+            var arrayPropertiesFila = filaEnProceso.GetType().GetProperties();
+            for (int f = 0; f < arrayPropertiesFila.Length; f++)
+            {
+                PropertyInfo pFila = arrayPropertiesFila[f];
+                if (pFila.PropertyType.AssemblyQualifiedName.StartsWith(lstIdsPropiedadesListas[0]))
+                {
+                    object currentVal = pFila.GetValue(filaEnProceso);
+                    foreach (var innerObject in (IEnumerable<object>)currentVal)
+                    {
+                        IValidable obj = (IValidable)innerObject;
+                        var innerValidationResult = obj.ValidarAtributos();
+                        (innerObject as FilaArchivoCarga).Evaluado = true;
+                        (innerObject as FilaArchivoCarga).EsValido = innerValidationResult.Observaciones.Count > 0 ? false : true;
+                        if (innerValidationResult.Observaciones.Count > 0) (innerObject as FilaArchivoCarga).Observaciones = innerValidationResult.Observaciones;
+                        if ((innerObject as FilaArchivoCarga).EsValido == false) hijosInvalidos++;
+                    }
+                }
+            }
+
+            if (validationResult.EsValido && (hijosInvalidos > 0 || validationResult.Observaciones.Count > 0))
+            {
+                contadoresBloque.Evaluados++;
+                contadoresBloque.EvaluadosObservados++;
+                filaEnProceso.EsValido = false;
+                filaEnProceso.Observaciones.AddRange(validationResult.Observaciones);
+                continue;
+            }
+            #endregion
+
             if (validationResult.EsValido)
             {
                 var currentModel = _converter.CovertToModel(filaEnProceso);
@@ -183,11 +219,39 @@ public sealed class ProcesoBloqueService<TBloque, TFila, TFilaModel> : Mantenimi
                 }
             }
 
+            #region Validacion result de atributos 
+            int hijosInvalidosResult = 0;
+            var arrayPropertiesFilaResult = filaEnProceso.GetType().GetProperties();
+            for (int f = 0; f < arrayPropertiesFilaResult.Length; f++)
+            {
+                PropertyInfo pFila = arrayPropertiesFilaResult[f];
+                if (pFila.PropertyType.AssemblyQualifiedName.StartsWith(lstIdsPropiedadesListas[0]))
+                {
+                    object currentVal = pFila.GetValue(filaEnProceso);
+                    foreach (var innerObjectResult in (IEnumerable<object>)currentVal)
+                    {
+                        var resultObs = validationResult.InnerResults.Find(r => r.GroupKey == pFila.Name);
+                        if (resultObs != null)
+                        {
+                            var obsList = resultObs.FilaObservaciones.FindAll(o => o.NroFila == (innerObjectResult as FilaArchivoCarga).NumeroFila);
+                            foreach (var obs in obsList)
+                            {
+                                (innerObjectResult as FilaArchivoCarga).Observaciones.Add(obs.Observacion);
+                                hijosInvalidosResult++;
+                            }
+                        }
+                    }
+                }
+            }
+            #endregion
+
             filaEnProceso.NumeroFila = objBloqueDeBD.FilaInicial + i;
 
             #region Asimilacion de resultados de validacion
             filaEnProceso.Evaluado = true;
             filaEnProceso.EsValido = validationResult.EsValido;
+            if (hijosInvalidosResult > 0)
+                filaEnProceso.EsValido = false;
             filaEnProceso.Observaciones.AddRange(validationResult.Observaciones);
             #endregion
 
@@ -196,15 +260,39 @@ public sealed class ProcesoBloqueService<TBloque, TFila, TFilaModel> : Mantenimi
             if (filaEnProceso.Evaluado && filaEnProceso.EsValido) { contadoresBloque.EvaluadosValidos++; }
             if (filaEnProceso.Evaluado && !filaEnProceso.EsValido) { contadoresBloque.EvaluadosObservados++; }
             #endregion
+            bool enviarNotificacionProgreso = false;
+            #region Invocacion a evento de progreso según frecuencia configurada
 
-            await _seguimientoBloqueService.ProcesarMensajeProgresoAsync(new ProcesoArchivoCargaEventArgs(TipoEventoProcesoArchivo.Progreso)
+            if (objBloqueDeBD.CantidadTotalElementos < frecuenciaActualizacionAvanceProcesoMinimo)
             {
-                IdArchivoCarga = objArchivoCarga.Id,
-                IdBloque = currentBloqueId,
-                IdEntidad = objArchivoCarga.IdEntidad,
-                CodigoEntidad = objArchivoCarga.CodigoEntidad,
-                ContadoresProceso = contadoresBloque
-            });
+                enviarNotificacionProgreso = true;
+            }
+            else if (objBloqueDeBD.CantidadTotalElementos < frecuenciaActualizacionAvanceProcesoEstandar &&
+                     filaEnProceso.NumeroFila % frecuenciaActualizacionAvanceProcesoMinimo == 0)
+            {
+                enviarNotificacionProgreso = true;
+            }
+            else if (filaEnProceso.NumeroFila % frecuenciaActualizacionAvanceProcesoEstandar == 0)
+            {
+                enviarNotificacionProgreso = true;
+            }
+            else if (filaEnProceso.NumeroFila == objArchivoCarga.CantidadTotalElementos)
+            {
+                enviarNotificacionProgreso = true;
+            }
+
+            if (enviarNotificacionProgreso)
+            {
+                await _seguimientoBloqueService.ProcesarMensajeProgresoAsync(new ProcesoArchivoCargaEventArgs(TipoEventoProcesoArchivo.Progreso)
+                {
+                    IdArchivoCarga = objArchivoCarga.Id,
+                    IdBloque = currentBloqueId,
+                    IdEntidad = objArchivoCarga.IdEntidad,
+                    CodigoEntidad = objArchivoCarga.CodigoEntidad,
+                    ContadoresProceso = contadoresBloque
+                });
+            }
+            #endregion
         }
 
         #region Marcando el bloque como "Evaluado"
