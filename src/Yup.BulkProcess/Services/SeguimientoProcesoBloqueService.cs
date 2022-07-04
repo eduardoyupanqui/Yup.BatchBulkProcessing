@@ -78,7 +78,7 @@ public class SeguimientoProcesoBloqueService : ISeguimientoProcesoBloqueService
     {
         var keyDirectorioBloquesProcesoArchivo = $"proc:{eventArgs.IdArchivoCarga}:blocks";
         var keyBloqueSummary = $"proc:{eventArgs.IdArchivoCarga}:{eventArgs.IdBloque}";
-        var response = await _redisDatabase.SetAddAsync(keyDirectorioBloquesProcesoArchivo, keyBloqueSummary, CommandFlags.FireAndForget);
+        var response = await _redisDatabase.Database.SetAddAsync(keyDirectorioBloquesProcesoArchivo, keyBloqueSummary, CommandFlags.FireAndForget);
     }
 
     private async Task ActualizarContadoresDeProcesoBloque(ProcesoArchivoCargaEventArgs eventArgs)
@@ -140,7 +140,7 @@ public class SeguimientoProcesoBloqueService : ISeguimientoProcesoBloqueService
         var contadoresArchivo = new ContadoresProceso();
         //Obteniendo total de registros del archivo
 
-        var rdvTotalRegistrosArchivo = _redisDatabase.Database.HashGet(keyResumenProcesoArchivo, _campoTotalElementos);
+        var rdvTotalRegistrosArchivo = await _redisDatabase.Database.HashGetAsync(keyResumenProcesoArchivo, _campoTotalElementos);
         contadoresArchivo.TotalElementos = (rdvTotalRegistrosArchivo.HasValue) ? (int)rdvTotalRegistrosArchivo : 0;
 
         ContadoresProceso contadoresBloqueActual;
@@ -155,11 +155,11 @@ public class SeguimientoProcesoBloqueService : ISeguimientoProcesoBloqueService
         }
         var listTasks = new List<Task>();
         //Actualizando los contadores del summary con los resultados de la suma de bloques
-        listTasks.Add(_redisDatabase.HashSetAsync(keyResumenProcesoArchivo, _campoEvaluados, contadoresArchivo.Evaluados));
-        listTasks.Add(_redisDatabase.HashSetAsync(keyResumenProcesoArchivo, _campoEvaluadosObservados, contadoresArchivo.EvaluadosObservados));
-        listTasks.Add(_redisDatabase.HashSetAsync(keyResumenProcesoArchivo, _campoEvaluadosValidos, contadoresArchivo.EvaluadosValidos));
-        listTasks.Add(_redisDatabase.HashSetAsync(keyResumenProcesoArchivo, _campoRegistradosValidos, contadoresArchivo.RegistradosValidos));
-        listTasks.Add(_redisDatabase.HashSetAsync(keyResumenProcesoArchivo, _campoRegistradosFallidos, contadoresArchivo.RegistradosFallidos));
+        listTasks.Add(_redisDatabase.Database.HashSetAsync(keyResumenProcesoArchivo, _campoEvaluados, contadoresArchivo.Evaluados));
+        listTasks.Add(_redisDatabase.Database.HashSetAsync(keyResumenProcesoArchivo, _campoEvaluadosObservados, contadoresArchivo.EvaluadosObservados));
+        listTasks.Add(_redisDatabase.Database.HashSetAsync(keyResumenProcesoArchivo, _campoEvaluadosValidos, contadoresArchivo.EvaluadosValidos));
+        listTasks.Add(_redisDatabase.Database.HashSetAsync(keyResumenProcesoArchivo, _campoRegistradosValidos, contadoresArchivo.RegistradosValidos));
+        listTasks.Add(_redisDatabase.Database.HashSetAsync(keyResumenProcesoArchivo, _campoRegistradosFallidos, contadoresArchivo.RegistradosFallidos));
         //Esperando ejecución de batch de instrucciones
         await Task.WhenAll(listTasks.ToArray());
 
