@@ -2,6 +2,7 @@
 using Autofac;
 using MediatR;
 using Yup.Soporte.Api.Application.Queries;
+using Yup.Soporte.Api.Infrastructure.Services;
 using Yup.Soporte.Domain.AggregatesModel.ArchivoCargaAggregate;
 using Yup.Soporte.Domain.AggregatesModel.Bloques;
 using Yup.Soporte.Infrastructure.MongoDBRepositories;
@@ -23,6 +24,12 @@ public class ApplicationModule : Autofac.Module
         builder.RegisterType<BloqueCargaGenericRepository>()
            .As<IBloqueCargaGenericRepository>()
            .InstancePerLifetimeScope();
+        #endregion
+
+        #region Servicios
+        builder.RegisterType<Fakes.FakeEventBus>()
+            .As<IEventBus>()
+            .InstancePerLifetimeScope();
         #endregion
     }
 }

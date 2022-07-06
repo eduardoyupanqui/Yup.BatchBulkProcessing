@@ -9,5 +9,5 @@ namespace Yup.Soporte.Api.Infrastructure.Services;
 
 public interface IEventBus
 {
-    void Publish(IntegrationEvent @event);
+    Task Publish(IntegrationEvent @event);
 }
