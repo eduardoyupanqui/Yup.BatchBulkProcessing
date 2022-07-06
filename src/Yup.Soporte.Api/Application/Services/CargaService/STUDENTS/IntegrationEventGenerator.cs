@@ -12,4 +12,10 @@ public class IntegrationEventGenerator : IIntegrationArchivoCargaService<Procesa
         var guidArchivo = (Guid)parametros[0];
         return new ProcesarDatosPersonaMasivaIntegrationEvent(guidArchivo);
     }
+    public IntegrationEvent GenerarBloqueEventoIntegracion(params object[] parametros)
+    {
+        var guidArchivo = (Guid)parametros[0];
+        var guidBloque = (Guid)parametros[1];
+        return new ProcesarDatosPersonaBloqueIntegrationEvent(guidArchivo, guidBloque);
+    }
 }

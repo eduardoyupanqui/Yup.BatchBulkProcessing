@@ -4,6 +4,7 @@ using Yup.Enumerados;
 using Yup.Soporte.Api.Application.IntegrationEvents;
 using Yup.Soporte.Api.Application.Services.Factories;
 using Yup.Soporte.Api.Application.Services.Interfaces;
+using Yup.Soporte.Api.Settings;
 using Yup.Soporte.Domain.SeedworkMongoDB;
 
 namespace Yup.Soporte.Api.Application.Commands;
@@ -25,7 +26,6 @@ public class CrearCargaArchivoExcelCommand: CrearCargaCommand
 
     public string DatosAdicionales { get; set; } //?
     public CrearCargaFlagsPermisos FlagsPermisos { get; set; }
-
     public class CrearCargaFlagsPermisos
     {
         public bool EstadoMatrizEntidadEstudiante { get; set; }
@@ -39,13 +39,14 @@ public class CrearCargaArchivoExcelCommand: CrearCargaCommand
         private readonly RegistroCargaArchivoExcelServiceFactory _registroCargaArchivoExcelServiceFactory;
         private readonly CrearCargaArchivoExcelCommandValidatorFactory _crearCargaArchivoExcelCommandValidatorFactory;
         private readonly IntegracionEventGeneratorFactory _integracionEventGenerator;
-
+        private readonly CargaMasivaSettings _cargaMasivaSettings;
         public CrearCargaArchivoExcelCommandHandler(
             ILogger<CrearCargaArchivoExcelCommandHandler> logger, 
             ISoporteIntegrationEventService soporteIntegrationEventService,
             RegistroCargaArchivoExcelServiceFactory registroCargaArchivoExcelServiceFactory,
             CrearCargaArchivoExcelCommandValidatorFactory crearCargaArchivoExcelCommandValidatorFactory,
-            IntegracionEventGeneratorFactory integracionEventGenerator 
+            IntegracionEventGeneratorFactory integracionEventGenerator,
+            CargaMasivaSettings cargaMasivaSettings
             )
         {
             _logger = logger;
@@ -53,14 +54,15 @@ public class CrearCargaArchivoExcelCommand: CrearCargaCommand
             _registroCargaArchivoExcelServiceFactory = registroCargaArchivoExcelServiceFactory;
             _crearCargaArchivoExcelCommandValidatorFactory = crearCargaArchivoExcelCommandValidatorFactory;
             _integracionEventGenerator = integracionEventGenerator;
+            _cargaMasivaSettings = cargaMasivaSettings;
         }
         public async Task<GenericResult<Guid>> Handle(CrearCargaArchivoExcelCommand request, CancellationToken cancellationToken)
         {
             var result = new GenericResult<Guid>();
             try
             {
-                IntegrationEvent @genericEvent = null;
                 ID_TBL_FORMATOS_CARGA tipoCargaActual = request.IdTblTipoCarga;
+                var tipoCargaSettings = _cargaMasivaSettings.GetSettingsPorTipoCarga(tipoCargaActual);
 
                 #region Validacion especializada
                 var registroCargaCommandValidator = _crearCargaArchivoExcelCommandValidatorFactory.Create(tipoCargaActual);
@@ -73,19 +75,38 @@ public class CrearCargaArchivoExcelCommand: CrearCargaCommand
                 var registroResult = await registroCargaService.RegistrarCargaYBloques(request);
                 if (registroResult.HasErrors)
                 {
-                    return registroResult;
+                    result.AddError(registroResult.Messages.FirstOrDefault().Message);
+                    return result;
                 }
                 #endregion
 
-                #region Emisión de Evento de Integración
-                @genericEvent = _integracionEventGenerator.Create(tipoCargaActual).GenerarEventoIntegracion(registroResult.DataObject, request.DatosAdicionales);
-                result.DataObject = registroResult.DataObject;
+                var (idArchivoCarga, idsBloque) = registroResult.DataObject;
+                result.DataObject = idArchivoCarga;
 
-                if (@genericEvent != null)
+                #region Emisión de Evento de Integración
+                var integrationEventGenerator = _integracionEventGenerator.Create(tipoCargaActual);
+                if (!tipoCargaSettings.ProcesarPorBloque)
                 {
-                    await _soporteIntegrationEventService.SaveEventAndSoporteContextChangesAsync(@genericEvent);
-                    await _soporteIntegrationEventService.PublishThroughEventBusAsync(@genericEvent);
+                    var @genericEvent = integrationEventGenerator.GenerarEventoIntegracion(idArchivoCarga, request.DatosAdicionales);
+                    if (@genericEvent != null)
+                    {
+                        await _soporteIntegrationEventService.SaveEventAndSoporteContextChangesAsync(@genericEvent);
+                        await _soporteIntegrationEventService.PublishThroughEventBusAsync(@genericEvent);
+                    }
                 }
+                else
+                {
+                    var @genericEvents = idsBloque.Select(idBloque => integrationEventGenerator.GenerarBloqueEventoIntegracion(idArchivoCarga, idBloque));
+                    if (@genericEvents != null)
+                    {
+                        foreach (var @genericEvent in @genericEvents)
+                        {
+                            await _soporteIntegrationEventService.SaveEventAndSoporteContextChangesAsync(@genericEvent);
+                            await _soporteIntegrationEventService.PublishThroughEventBusAsync(@genericEvent);
+                        }
+                    }
+                }
+                
                 #endregion
             }
             catch (Exception ex)

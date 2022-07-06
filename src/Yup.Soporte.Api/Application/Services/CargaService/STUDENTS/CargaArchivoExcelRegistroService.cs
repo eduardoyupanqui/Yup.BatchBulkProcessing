@@ -58,9 +58,9 @@ public class RegistroCargaArchivoExcelService : CargaArchivoExcelRegistroBaseSer
         return lstFilasArchivoPostulante;
     }
 
-    public async Task<GenericResult<Guid>> RegistrarCargaYBloques(CrearCargaArchivoExcelCommand command)
+    public async Task<GenericResult<(Guid, IEnumerable<Guid>)>> RegistrarCargaYBloques(CrearCargaArchivoExcelCommand command)
     {
-        var result = new GenericResult<Guid>();
+        var result = new GenericResult<(Guid, IEnumerable<Guid>)>();
 
         #region Lectura de archivo excel
         var lecturaExcelResult = ObtenerArchivoOrigen(command);
@@ -73,15 +73,20 @@ public class RegistroCargaArchivoExcelService : CargaArchivoExcelRegistroBaseSer
 
         try
         {
-            result = await RegistrarArchivoCarga(command);
-            if (result.HasErrors) { return result; }
-            var idArchivoCarga = result.DataObject;
-            await RegistrarBloques(idArchivoCarga,
+            var registrarResult = await RegistrarArchivoCarga(command);
+            if (registrarResult.HasErrors) 
+            {
+                result.AddError(registrarResult.Messages.FirstOrDefault().Message);
+                return result; 
+            }
+            var idArchivoCarga = registrarResult.DataObject;
+            var bloques = await RegistrarBloques(idArchivoCarga,
                                                   LeerFilasOrigen(lecturaExcelResult.DataObject, command)
                                                   .Select(x => ConvertirAFilaPersistencia(x, command)).ToList(),
                                                   command.UsuarioRegistro.ToString(),
                                                   command.IpRegistro
                                                   );
+            result.DataObject = (idArchivoCarga, bloques);
             return result;
         }
         catch (Exception ex)

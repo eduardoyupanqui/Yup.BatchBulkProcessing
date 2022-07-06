@@ -12,5 +12,5 @@ namespace Yup.Soporte.Api.Application.Services.Interfaces;
 /// <typeparam name="TCargaCommand"></typeparam>
 public interface ICargaRegistroService<TCargaCommand> where TCargaCommand : CrearCargaCommand
 {
-    Task<GenericResult<Guid>> RegistrarCargaYBloques(TCargaCommand command);
+    Task<GenericResult<(Guid, IEnumerable<Guid>)>> RegistrarCargaYBloques(TCargaCommand command);
 }

@@ -24,7 +24,7 @@ public abstract class CargaRegistroBaseService<TBloqueCarga, TFilaArchivoCarga>
     protected readonly IGenericCargaQueries _genericCargaQueries;
 
     private const int _1MB = 1024;
-    private const int _tamañoPorDefectoDeBloque = 100;
+    private const int _tamañoPorDefectoDeBloque = 10;
 
     public CargaRegistroBaseService(
                                                           IArchivoCargaRepository archivoCargaRepository,
@@ -37,7 +37,7 @@ public abstract class CargaRegistroBaseService<TBloqueCarga, TFilaArchivoCarga>
         _genericCargaQueries = genericCargaQueries ?? throw new ArgumentNullException(nameof(genericCargaQueries));
     }
 
-    protected async Task RegistrarBloques(Guid idArchivoCarga, IEnumerable<TFilaArchivoCarga> filas, string idUsuarioAutor, string ipOrigen)
+    protected async Task<IEnumerable<Guid>> RegistrarBloques(Guid idArchivoCarga, IEnumerable<TFilaArchivoCarga> filas, string idUsuarioAutor, string ipOrigen)
     {
         var totalRegistros = filas.Count();
         var totalBloques = totalRegistros / _tamañoPorDefectoDeBloque;
@@ -85,6 +85,7 @@ public abstract class CargaRegistroBaseService<TBloqueCarga, TFilaArchivoCarga>
         }
 
         await _bloquesGenericRepository.AddManyAsync(lstBloquesAInsertar);
+        return lstBloquesAInsertar.Select(x => x.Id);
     }
 
     protected async Task<GenericResult<Guid>> RegistrarCarga(CrearCargaCommand command, CrearCargaCommandArchivoData archivoData = null)

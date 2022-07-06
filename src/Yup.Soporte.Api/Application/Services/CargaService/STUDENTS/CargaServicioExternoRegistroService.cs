@@ -46,21 +46,26 @@ public class CargaServicioExternoRegistroService : CargaRegistroBaseService<Bloq
         };
     }
 
-    public async Task<GenericResult<Guid>> RegistrarCargaYBloques(CrearCargaServicioExternoCommand<DatosPersonaRequest> command)
+    public async Task<GenericResult<(Guid, IEnumerable<Guid>)>> RegistrarCargaYBloques(CrearCargaServicioExternoCommand<DatosPersonaRequest> command)
     {
-        var result = new GenericResult<Guid>();
+        var result = new GenericResult<(Guid, IEnumerable<Guid>)>();
 
         try
         {
-            result = await RegistrarCarga(command);
-            if (result.HasErrors) { return result; }
-            var idArchivoCarga = result.DataObject;
-            await RegistrarBloques(idArchivoCarga,
+            var registrarResult = await RegistrarCarga(command);
+            if (registrarResult.HasErrors)
+            {
+                result.AddError(registrarResult.Messages.FirstOrDefault().Message);
+                return result;
+            }
+            var idArchivoCarga = registrarResult.DataObject;
+            var bloques = await RegistrarBloques(idArchivoCarga,
                                                   command.Elementos.Foliar()
                                                   .Select(x => ConvertirAFilaPersistencia(x, command)).ToList(),
                                                   command.UsuarioRegistro.ToString(),
                                                   command.IpRegistro
                                                   );
+            result.DataObject = (idArchivoCarga, bloques);
             return result;
         }
         catch (Exception ex)
