@@ -1,7 +1,7 @@
 using System.Net;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Yup.BulkProcess.Application.Commands;
+using Yup.Student.BulkProcess.Application.Commands;
 using Yup.Core;
 
 namespace Yup.Student.BulkProcess.Controllers;
@@ -20,11 +20,20 @@ public class RunProcessController : ControllerBase
         _mediator = mediator;
     }
 
-    [HttpGet(Name = "CrearStudentBulk")]
+    [HttpGet("CrearStudentBulk")]
     [ProducesResponseType(typeof(GenericResult<Guid>), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> CrearStudentBulk([FromQuery] Guid guidArchivo)
     {
         var command = new CrearStudentBulkCommand(guidArchivo);
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    [HttpGet("CrearStudentBlockBulk")]
+    [ProducesResponseType(typeof(GenericResult<Guid>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> CrearStudentBlockBulk([FromQuery] Guid guidArchivo, [FromQuery] Guid guidBloque)
+    {
+        var command = new CrearStudentBlockBulkCommand(guidArchivo, guidBloque);
         var result = await _mediator.Send(command);
         return Ok(result);
     }
