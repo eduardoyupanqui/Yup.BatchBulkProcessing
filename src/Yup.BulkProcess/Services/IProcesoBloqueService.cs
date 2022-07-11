@@ -19,4 +19,5 @@ public interface IProcesoBloqueService<TBloque, TFila, TFilaModel>
     Func<ProcesoArchivoCargaEventArgs, Task> ProgresoProcesoAsync { set; }
     Func<ProcesoArchivoCargaEventArgs, Task> FinProcesoAsync { set; }
     Task ProcesarBloquesDeArchivoAsync(Guid idArchivoCarga);
+    Task ProcesarBloqueDeArchivoAsync(Guid idArchivoCarga, Guid idBloqueCarga);
 }

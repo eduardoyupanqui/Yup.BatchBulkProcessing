@@ -17,15 +17,17 @@ using Yup.Student.Domain.Validations;
 
 namespace Yup.Student.BulkProcess.Application.Commands;
 
-public class CrearStudentBulkCommand : IRequest<GenericResult>
+public class CrearStudentBlockBulkCommand : IRequest<GenericResult>
 {
     public Guid GuidArchivo { get; private set; }
-    public CrearStudentBulkCommand(Guid guidArchivo)
+    public Guid GuidBloque { get; private set; }
+    public CrearStudentBlockBulkCommand(Guid guidArchivo, Guid guidBloque)
     {
         GuidArchivo = guidArchivo;
+        GuidBloque = guidBloque;
     }
 
-    public class CrearStudentBulkCommandHandler : IRequestHandler<CrearStudentBulkCommand, GenericResult>
+    public class CrearStudentBlockBulkCommandHandler : IRequestHandler<CrearStudentBlockBulkCommand, GenericResult>
     {
         private readonly ILogger _logger;
         private readonly IEventBus _eventBus;
@@ -36,10 +38,9 @@ public class CrearStudentBulkCommand : IRequest<GenericResult>
         private IProcesoBloqueService<BloquePersonas, FilaArchivoPersona, Student.Domain.AggregatesModel.StudentAggregate.Student> _procesoBloqueService;
 
         private readonly StudentValidationContextGenerator _studentValidationContextGenerator;
-        public CrearStudentBulkCommandHandler(
-            ILogger<CrearStudentBulkCommandHandler> logger,
+        public CrearStudentBlockBulkCommandHandler(
+            ILogger<CrearStudentBlockBulkCommandHandler> logger,
             IEventBus eventBus,
-            ISeguimientoProcesoBloqueService seguimientoBloqueService,
             IArchivoCargaRepository archivoCargaRepository,
             ITransversalQueries transversalQueries,
 
@@ -56,16 +57,16 @@ public class CrearStudentBulkCommand : IRequest<GenericResult>
             _studentValidationContextGenerator = studentValidationContextGenerator;
         }
 
-        public async Task<GenericResult> Handle(CrearStudentBulkCommand request, CancellationToken cancellationToken)
+        public async Task<GenericResult> Handle(CrearStudentBlockBulkCommand request, CancellationToken cancellationToken)
         {
             ArchivoCarga archivoCarga = await _archivoCargaRepository.FindByIdAsync(request.GuidArchivo);
             if (archivoCarga == null) return new GenericResult(MessageType.Error, "No se encontro el archivo carga.");
 
-            var result = await ProcesarArchivoCarga(archivoCarga);
+            var result = await ProcesarBloqueCarga(archivoCarga, request.GuidBloque);
             return result;
         }
 
-        private async Task<GenericResult> ProcesarArchivoCarga(ArchivoCarga archivoCarga)
+        private async Task<GenericResult> ProcesarBloqueCarga(ArchivoCarga archivoCarga, Guid guidBloque)
         {
             GenericResult result = new GenericResult();
             string hostName = System.Net.Dns.GetHostName();
@@ -78,7 +79,7 @@ public class CrearStudentBulkCommand : IRequest<GenericResult>
             _procesoBloqueService.ProgresoProcesoAsync = OnProcesoBloqueServiceEventoProgresoProceso;
             _procesoBloqueService.FinProcesoAsync = OnProcesoBloqueServiceEventoFinProceso;
             //4) Invocación del proceso
-            await _procesoBloqueService.ProcesarBloquesDeArchivoAsync(archivoCarga.Id);
+            await _procesoBloqueService.ProcesarBloqueDeArchivoAsync(archivoCarga.Id, guidBloque);
 
 
             return result;
